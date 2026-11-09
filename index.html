@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050A08">
+  <title>EVEN HUD 555 V1.4.0</title>
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div>
+        <div class="brand">EVEN HUD <span>555</span></div>
+        <div class="sub">PERSONAL GLASS DASHBOARD</div>
+      </div>
+      <div class="version">V1.4.0</div>
+    </header>
+
+    <main>
+      <!-- 手機預覽與快速控制 -->
+      <section class="panel">
+        <div class="panel-head">
+          <span>G2 HUD 當前頁面</span>
+          <span id="page-indicator" class="live">PAGE: VOCABULARY</span>
+        </div>
+        <div class="hud-quick-view" id="quick-view">
+          <div id="qv-title">載入中...</div>
+          <div id="qv-body">連線至 G2 波導鏡片...</div>
+        </div>
+        <div class="sim-controls">
+          <button id="btn-prev" type="button">上一個 (上滑)</button>
+          <button id="btn-next" type="button">下一個 / 刷新 (單擊)</button>
+          <button id="btn-page" type="button">切換頁面 (雙擊)</button>
+        </div>
+      </section>
+
+      <!-- 集中化設定管理面板 -->
+      <section class="panel">
+        <div class="panel-head">
+          <span>01 / 模組與顯示設置</span>
+          <span id="settings-status" class="status">已載入</span>
+        </div>
+        <div class="setting-row">
+          <label>單字輪播週期</label>
+          <select id="cfg-vocab-interval">
+            <option value="0">手動切換</option>
+            <option value="5000">5 秒</option>
+            <option value="10000">10 秒</option>
+            <option value="15000" selected>15 秒</option>
+            <option value="30000">30 秒</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label>ETF 報價更新週期</label>
+          <select id="cfg-stock-interval">
+            <option value="30000">30 秒</option>
+            <option value="60000" selected>60 秒</option>
+            <option value="120000">120 秒</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label>新聞輪播週期</label>
+          <select id="cfg-news-interval">
+            <option value="0">手動切換</option>
+            <option value="15000">15 秒</option>
+            <option value="30000" selected>30 秒</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label>眼鏡外框顯示 (減少波導光暈)</label>
+          <select id="cfg-border-mode">
+            <option value="1" selected>顯示外框</option>
+            <option value="0">無框極簡純字模式</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- API 端點配置面板 (SPEC.md Section 4) -->
+      <section class="panel">
+        <div class="panel-head">
+          <span>02 / API 端點與連線設置</span>
+          <span id="api-status" class="status">預設通道</span>
+        </div>
+        <div class="input-group">
+          <label class="field-label">TWSE 報價 API</label>
+          <input type="text" id="cfg-twse-url" spellcheck="false">
+        </div>
+        <div class="input-group">
+          <label class="field-label">即時新聞 RSS/API</label>
+          <input type="text" id="cfg-news-url" spellcheck="false">
+        </div>
+        <div class="import-actions">
+          <button id="btn-save-api" type="button">儲存 API 設定</button>
+          <button id="btn-test-api" class="btn-sub" type="button">測試連線</button>
+        </div>
+      </section>
+
+      <!-- 自訂單字管理 -->
+      <section class="panel">
+        <div class="panel-head">
+          <span>03 / 自訂單字管理</span>
+          <span id="vocab-msg" class="status">支援 CSV / JSON</span>
+        </div>
+        <textarea id="vocab-input" rows="3" placeholder="每行一筆：單字,詞性,中文,&quot;英文例句&quot;"></textarea>
+        <div class="import-actions">
+          <button id="btn-import-vocab" type="button">匯入單字</button>
+          <button id="btn-export-vocab" class="btn-sub" type="button">匯出單字</button>
+        </div>
+      </section>
+
+      <!-- 全域設定備份與還原 (SPEC.md Section 7) -->
+      <section class="panel">
+        <div class="panel-head">
+          <span>04 / 全域設定備份 (JSON)</span>
+          <span id="backup-msg" class="status">待命</span>
+        </div>
+        <textarea id="backup-input" rows="3" placeholder="貼上設定 JSON 進行全域還原"></textarea>
+        <div class="import-actions">
+          <button id="btn-export-all" class="btn-sub" type="button">匯出全域 JSON</button>
+          <button id="btn-import-all" type="button">驗證並匯入</button>
+          <button id="btn-reset-all" class="btn-sub" type="button">重置預設值</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>G2 手勢：單擊換筆/刷新 ｜ 雙擊換頁 (單字 ⇄ ETF ⇄ 新聞) ｜ 滑動導覽</span>
+    </footer>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

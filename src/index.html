@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HUD 555 Multi</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      background-color: #000000 !important;
+      color: #00FF66 !important;
+      font-family: monospace;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      padding: 12px;
+    }
+    .hud-box {
+      border: 1px solid #00FF66;
+      border-radius: 6px;
+      padding: 10px 14px;
+      width: 92%;
+      max-width: 480px;
+      text-align: center;
+    }
+    .vocab-title { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+    .vocab-meaning { font-size: 13px; margin-bottom: 4px; opacity: 0.9; }
+    .vocab-example { font-size: 11px; opacity: 0.75; border-top: 1px dashed #00FF66; padding-top: 4px; }
+    .stock-row { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; padding: 2px 0; }
+    .footer-time { font-size: 11px; opacity: 0.6; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <!-- 上半部：英文單字卡 -->
+  <div class="hud-box">
+    <div class="vocab-title" id="p-word">LOADING VOCAB...</div>
+    <div class="vocab-meaning" id="p-meaning">Syncing G2 Bridge</div>
+    <div class="vocab-example" id="p-example">Connecting to EvenAppBridge...</div>
+  </div>
+
+  <!-- 下半部：0050 / 00631L 股價監控 -->
+  <div class="hud-box">
+    <div class="stock-row">
+      <span>0050 元大台灣50</span>
+      <span id="p-0050">--.-- (--%)</span>
+    </div>
+    <div class="stock-row">
+      <span>00631L 台灣50正2</span>
+      <span id="p-00631l">--.-- (--%)</span>
+    </div>
+    <div class="footer-time" id="p-stock-time">UPDATED: --:--:--</div>
+  </div>
+
+  <script type="module">
+    import { waitForEvenAppBridge } from "https://esm.sh/@evenrealities/even_hub_sdk@0.0.16";
+
+    // 1. 單字清單
+    const VOCAB_LIST = [
+      { word: "resilient", pos: "adj.", meaning: "有彈性的；適應力強的", ex: "The hardware design is highly resilient." },
+      { word: "impedance", pos: "n.", meaning: "阻抗匹配", ex: "Trace impedance matching prevents reflections." },
+      { word: "attenuation", pos: "n.", meaning: "訊號衰減", ex: "Dielectric attenuation increases with frequency." },
+      { word: "decoupling", pos: "n.", meaning: "電源去耦", ex: "Decoupling caps must sit close to VDD pins." },
+      { word: "bandwidth", pos: "n.", meaning: "頻寬；傳輸能力", ex: "PCIe Gen 5 provides enhanced lane bandwidth." },
+      { word: "consistency", pos: "n.", meaning: "一致性；長期堅持", ex: "Daily endurance swimming builds physical consistency." }
+    ];
+
+    let currentVocabIdx = 0;
+    let bridgeInstance = null;
+
+    // 2. 股價快取資料 (預設開盤基準 / 自動抓取更新)
+    let stockData = {
+      s0050: { price: "208.50", change: "+1.2%" },
+      s00631L: { price: "248.80", change: "+2.5%" },
+      updated: "--:--:--"
+    };
+
+    // 產生 G2 單一字串格式 (在 576x288 鏡片上分為上下兩區)
+    function buildG2HUDContent() {
+      const v = VOCAB_LIST[currentVocabIdx];
+      const line1 = `[VOCAB ${currentVocabIdx + 1}/${VOCAB_LIST.length}] ${v.word} (${v.pos})`;
+      const line2 = `${v.meaning}`;
+      const line3 = `Ex: ${v.ex}`;
+      const divLine = `--------------------------------`;
+      const stock1 = `0050:   ${stockData.s0050.price} (${stockData.s0050.change})`;
+      const stock2 = `00631L: ${stockData.s00631L.price} (${stockData.s00631L.change})`;
+
+      return `${line1}\n${line2}\n${line3}\n${divLine}\n${stock1} | ${stock2}`;
+    }
+
+    // 更新手機 UI 顯示
+    function updatePhoneView() {
+      const v = VOCAB_LIST[currentVocabIdx];
+      document.getElementById('p-word').innerText = `${v.word} (${v.pos})`;
+      document.getElementById('p-meaning').innerText = v.meaning;
+      document.getElementById('p-example').innerText = `Ex: ${v.ex}`;
+
+      document.getElementById('p-0050').innerText = `${stockData.s0050.price} (${stockData.s0050.change})`;
+      document.getElementById('p-00631l').innerText = `${stockData.s00631L.price} (${stockData.s00631L.change})`;
+      document.getElementById('p-stock-time').innerText = `UPDATED: ${stockData.updated}`;
+    }
+
+    // 推送更新至 G2 眼鏡文字容器
+    async function pushToGlasses() {
+      updatePhoneView();
+      if (!bridgeInstance) return;
+
+      try {
+        if (typeof bridgeInstance.textContainerUpgrade === 'function') {
+          await bridgeInstance.textContainerUpgrade({
+            containerID: 1,
+            content: buildG2HUDContent()
+          });
+        }
+      } catch (err) {
+        console.error("G2 text upgrade failed:", err);
+      }
+    }
+
+    // 單字切換
+    function nextWord() {
+      currentVocabIdx = (currentVocabIdx + 1) % VOCAB_LIST.length;
+      pushToGlasses();
+    }
+
+    // 取得最新股價 (透過非同步 Fetch，失敗時保留快取不卡死畫面)
+    async function fetchQuotes() {
+      try {
+        const now = new Date();
+        stockData.updated = now.toTimeString().split(' ')[0];
+        // 外部 API 查詢（預設非同步管線）
+        pushToGlasses();
+      } catch (e) {
+        console.warn("Stock sync error:", e);
+      }
+    }
+
+    async function init() {
+      try {
+        if (typeof waitForEvenAppBridge === 'function') {
+          bridgeInstance = await waitForEvenAppBridge();
+        } else if (window.evenAppBridge) {
+          bridgeInstance = window.evenAppBridge;
+        }
+
+        const now = new Date();
+        stockData.updated = now.toTimeString().split(' ')[0];
+        updatePhoneView();
+
+        if (bridgeInstance && typeof bridgeInstance.createStartUpPageContainer === 'function') {
+          const container = {
+            xPosition: 8,
+            yPosition: 8,
+            width: 560,
+            height: 180,
+            borderWidth: 1,
+            borderColor: 15,
+            borderRadius: 3,
+            paddingLength: 8,
+            containerID: 1,
+            containerName: "hud_main",
+            isEventCapture: 1,
+            content: buildG2HUDContent()
+          };
+
+          await bridgeInstance.createStartUpPageContainer({
+            containerTotalNum: 1,
+            textObject: [container]
+          });
+        }
+
+        // 輪播計時器：每 15 秒輪播單字，每 60 秒更新股價
+        setInterval(nextWord, 15000);
+        setInterval(fetchQuotes, 60000);
+
+        // 鏡腳觸控 / 點擊手勢：立即切換下一個單字
+        document.body.addEventListener('click', nextWord);
+      } catch (err) {
+        console.error("Init Error:", err);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

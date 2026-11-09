@@ -1,0 +1,19 @@
+
+> even-hud-555@1.2.0 dev
+> vite --host 0.0.0.0 --host 0.0.0.0 --port 5173
+
+
+  VITE v6.4.5  ready in 164 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://7.104.200.6:5173/
+  ➜  Network: http://10.131.102.168:5173/
+  ➜  Network: http://192.168.68.51:5173/
+11:14:01 AM [vite] (client) page reload src/main.ts
+11:25:14 AM [vite] (client) page reload index.html
+11:25:14 AM [vite] (client) hmr update /src/style.css
+11:25:14 AM [vite] (client) page reload src/main.ts
+11:29:23 AM [vite] (client) page reload index.html
+11:29:23 AM [vite] (client) page reload src/main.ts
+11:35:19 AM [vite] (client) page reload index.html
+11:35:19 AM [vite] (client) hmr update /src/style.css
