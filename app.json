@@ -1,7 +1,16 @@
 {
   "name": "Even HUD 555",
   "version": "1.5.0",
+  "edition": "202601",
+  "min_sdk_version": "0.0.16",
   "package_id": "com.nickwu.hud555",
+  "entrypoint": "dist/index.html",
   "description": "Personal Glass Dashboard: Fluent-style Flashcards, ETF & News",
-  "main": "dist/index.html"
+  "supported_languages": ["en", "zh"],
+  "permissions": [
+    {
+      "name": "network",
+      "desc": "Fetch live ETF quotes and RSS news feeds"
+    }
+  ]
 }
