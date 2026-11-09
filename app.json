@@ -1,12 +1,15 @@
 {
   "name": "Even HUD 555",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "edition": "202601",
   "min_sdk_version": "0.0.16",
   "package_id": "com.nickwu.hud555",
   "entrypoint": "index.html",
-  "description": "Personal Glass Dashboard: Fluent-style Flashcards, ETF & News",
-  "supported_languages": ["en", "zh"],
+  "description": "Personal G2 Dashboard: SRS Vocabulary, Taiwan ETF and Taiwan News",
+  "supported_languages": [
+    "en",
+    "zh"
+  ],
   "permissions": [
     {
       "name": "network",
